@@ -34,6 +34,8 @@ class _ZrenConsumerState<
   late C controller;
   late StreamSubscription<E> baseEffectStream;
 
+  bool _initialized = false;
+
   void _controllerStateListener() {
     if (widget.buildWhen?.call(controller.prevState, controller.state) ??
         true) {
@@ -52,31 +54,17 @@ class _ZrenConsumerState<
   }
 
   @override
-  void didUpdateWidget(ZrenConsumer<C, S, E> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newController = ZrenProvider.of<C>(context);
-    if (newController != controller) {
-      controller.removeListener(_controllerStateListener);
-      baseEffectStream.cancel();
-      controller = newController;
-      controller.addListener(_controllerStateListener);
-      baseEffectStream = controller.effectStream.listen(
-        _controllerEffectListener,
-      );
-    }
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     final newController = ZrenProvider.of<C>(context);
-
-    if (controller == newController) return;
-
-    baseEffectStream.cancel();
-    controller.removeListener(_controllerStateListener);
+    if (_initialized) {
+      if (controller == newController) return;
+      baseEffectStream.cancel();
+      controller.removeListener(_controllerStateListener);
+    }
     controller = newController;
+    _initialized = true;
     controller.addListener(_controllerStateListener);
     baseEffectStream = controller.effectStream.listen(
       _controllerEffectListener,
