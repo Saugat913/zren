@@ -42,19 +42,13 @@ class _ZrenConsumerState<
   }
 
   void _controllerEffectListener(E effect) {
-      if (!mounted) return;
-      widget.listener?.call(context, effect);
+    if (!mounted) return;
+    widget.listener?.call(context, effect);
   }
 
   @override
   void initState() {
     super.initState();
-    final provider = ZrenProvider.of<C>(context);
-    controller = provider;
-    controller.addListener(_controllerStateListener);
-    baseEffectStream = controller.effectStream.listen(
-      _controllerEffectListener,
-    );
   }
 
   @override
@@ -70,6 +64,23 @@ class _ZrenConsumerState<
         _controllerEffectListener,
       );
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final newController = ZrenProvider.of<C>(context);
+
+    if (controller == newController) return;
+
+    baseEffectStream.cancel();
+    controller.removeListener(_controllerStateListener);
+    controller = newController;
+    controller.addListener(_controllerStateListener);
+    baseEffectStream = controller.effectStream.listen(
+      _controllerEffectListener,
+    );
   }
 
   @override
