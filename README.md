@@ -1,136 +1,131 @@
 # Zren
 
-A modular, lightweight Flutter framework for modern state management, form handling, and result-oriented programming.
+A lightweight Flutter framework for type-safe form handling, async state management, and MVVM patterns.
 
 ## Features
 
-- **Async State Management**: Cleanly handle initial, loading, success, and failure states.
-- **Form Handling**: Simple and type-safe form validation and state tracking.
-- **MVVM Pattern**: Streamlined Model-View-ViewModel implementation using `ChangeNotifier` and `InheritedWidget`.
-- **Result Type**: Robust error handling using a functional `Result` type.
+- **Type-Safe Forms**: Compile-time type checking with `FormFieldKey<T>`
+- **Async States**: Reactive async state management with `AsyncValue`
+- **MVVM Pattern**: Simple controller-based architecture
+- **Result Type**: Functional error handling
 
-## Getting Started
-
-Add `zren` to your `pubspec.yaml` (once published or as a path dependency).
+## Installation
 
 ```yaml
 dependencies:
-  zren:
-    path: ./zren
+  zren: ^0.1.0
 ```
 
-## Usage
+## Forms
 
-### 1. Async State Management
-
-`AsyncState` helps you model asynchronous data flow without boilerplate.
+Type-safe form handling with field keys.
 
 ```dart
 import 'package:zren/zren.dart';
 
-AsyncState<String> state = const AsyncState.loading();
+// Define fields
+class LoginFields {
+  static const email = FormFieldKey<String>('email');
+  static const password = FormFieldKey<String>('password');
+}
 
-// Use in UI
-state.when(
-  initial: () => const Text('Initial'),
-  loading: () => const CircularProgressIndicator(),
-  success: (data) => Text('Data: $data'),
-  failure: (error, {stackTrace}) => Text('Error: $error'),
-);
-```
+// Build form
+class LoginForm extends StatelessWidget {
+  final controller = FormController();
 
-### 2. Form Handling
-
-Handle form fields with ease using `FormController` and `FormFieldBuilder`.
-
-```dart
-import 'package:zren/zren.dart';
-
-final controller = FormController();
-
-// In your build method:
-FormFieldBuilder<String>(
-  formController: controller,
-  name: 'email',
-  initialValue: '',
-  builder: (state) => TextField(
-    onChanged: (value) => controller.setValue('email', value),
-    decoration: InputDecoration(
-      errorText: state.error,
-      labelText: 'Email',
-    ),
-  ),
-);
-
-// Validate
-if (controller.validate()) {
-  print('Form is valid: ${controller.getValue('email')}');
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        FormFieldBuilder<String>(
+          formController: controller,
+          fieldKey: LoginFields.email,
+          initialValue: '',
+          validators: [Validators.required(), Validators.email()],
+          builder: (state, fieldController) => TextField(
+            onChanged: fieldController.setValue,
+            decoration: InputDecoration(
+              labelText: 'Email',
+              errorText: state.error,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (controller.validate()) {
+              final email = controller.getValue(LoginFields.email);
+              print('Email: $email');
+            }
+          },
+          child: Text('Submit'),
+        ),
+      ],
+    );
+  }
 }
 ```
 
-### 3. MVVM Pattern
+## AsyncValue
 
-`Zren` provides a simplified MVVM architecture.
+Reactive async state management.
 
 ```dart
-import 'package:zren/zren.dart';
+final userValue = AsyncValue<User>();
 
-// Your Controller
-class MyController extends ZrenController<MyState, MyEffect> {
-  MyController() : super(MyInitialState());
+// In UI
+ValueListenableBuilder(
+  valueListenable: userValue,
+  builder: (context, _, __) => userValue.when(
+    initial: () => Text('Tap to load'),
+    loading: () => CircularProgressIndicator(),
+    success: (user) => Text('Hello, ${user.name}'),
+    failure: (error, _) => Text('Error: $error'),
+  ),
+);
 
-  void load() {
-    emit(MyLoadingState());
-    // ... logic
-    emit(MySuccessState(data));
-    emitEffect(MyShowToastEffect());
+// Update state
+userValue.loading();
+userValue.success(User('John'));
+userValue.failure('Network error');
+```
+
+## MVVM
+
+Controller-based state management.
+
+```dart
+class CounterController extends ZrenController<CounterState, CounterEffect> {
+  CounterController() : super(CounterState(0));
+
+  void increment() {
+    emit(CounterState(state.count + 1));
   }
 }
 
 // In UI
-ZrenProvider<MyController>(
-  create: () => MyController(),
-  child: ZrenConsumer<MyController, MyState, MyEffect>(
-    listener: (context, effect) {
-      if (effect is MyShowToastEffect) {
-        // Show toast
-      }
-    },
+ZrenProvider<CounterController>(
+  create: () => CounterController(),
+  child: ZrenBuilder<CounterController, CounterState, CounterEffect>(
     builder: (context, state, controller) {
-      return state.when(
-        initial: () => ElevatedButton(
-          onPressed: controller.load,
-          child: Text('Load'),
-        ),
-        // ...
-      );
+      return Text('Count: ${state.count}');
     },
   ),
-);
+)
 ```
 
-### 4. Result Type
+## Result Type
 
-Avoid exceptions for expected errors.
+Functional error handling.
 
 ```dart
-import 'package:zren/result.dart';
-
-Result<int> divide(int a, int b) {
-  if (b == 0) return Result.failure('Division by zero');
-  return Result.success(a ~/ b);
+ZrenResult<int> divide(int a, int b) {
+  if (b == 0) return ZrenResult.failure('Cannot divide by zero');
+  return ZrenResult.success(a ~/ b);
 }
 
-final res = divide(10, 2);
-res.when(
-  success: (val) => print('Result: $val'),
-  failure: (err) => print('Error: $err'),
+final result = divide(10, 2);
+result.when(
+  success: (value) => print(value),
+  failure: (error, stackTrace) => print(error),
 );
 ```
-
-## Project Structure
-
-This package follows the recommended Dart structure:
-- `lib/src/`: Internal implementation.
-- `lib/*.dart`: Public API entry points (e.g., `form.dart`, `async.dart`, `mvvm.dart`).
-- `lib/zren.dart`: Unified entry point exporting all features.

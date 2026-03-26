@@ -15,21 +15,21 @@ class FormFieldController<T> {
   }
 
   void clearError() {
-    state.value = state.value.copyWith(clearError: true);
+    state.value = state.value.copyWith(error:'');
   }
 
   void validate() {
     state.value = state.value.validate();
   }
 
-  void onChanged(T value) {
-    state.value = state.value.copyWith(value: value);
-  }
-
   void onTouched() {
     state.value = state.value.copyWith(touched: true);
   }
 
+ void reset(){
+  state.value = state.value.copyWith(value: state.value.oldValue, touched: false);
+ }
+ 
   void dispose() {
     state.dispose();
   }

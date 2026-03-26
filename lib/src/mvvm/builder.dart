@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:zren/src/mvvm/base_effect.dart';
 import 'package:zren/src/mvvm/base_state.dart';
 import 'package:zren/src/mvvm/consumer.dart';

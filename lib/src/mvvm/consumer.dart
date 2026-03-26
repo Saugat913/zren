@@ -14,12 +14,10 @@ class ZrenConsumer<
     extends StatefulWidget {
   const ZrenConsumer({
     super.key,
-    this.listenWhen,
     required this.builder,
     this.buildWhen,
     this.listener,
   });
-  final bool Function(S prev, S curr)? listenWhen;
   final bool Function(S prev, S curr)? buildWhen;
   final void Function(BuildContext context, E effect)? listener;
   final Widget Function(BuildContext context, S state, C controller) builder;
@@ -44,11 +42,8 @@ class _ZrenConsumerState<
   }
 
   void _controllerEffectListener(E effect) {
-    if (widget.listenWhen?.call(controller.prevState, controller.state) ??
-        true) {
       if (!mounted) return;
       widget.listener?.call(context, effect);
-    }
   }
 
   @override

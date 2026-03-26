@@ -53,6 +53,17 @@ sealed class AsyncState<T> extends Equatable {
     ),
   };
 
+
+  T? get dataOrNull => switch (this) {
+    AsyncSuccessState<T>(:final data) => data,
+    _ => null,
+  };
+
+  Object? get errorOrNull => switch (this) {
+    AsyncFailureState<T>(:final error) => error,
+    _ => null,
+  };
+
   @override
   List<Object?> get props;
 }
