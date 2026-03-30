@@ -5,3 +5,5 @@ export 'src/mvvm/consumer.dart';
 export 'src/mvvm/listener.dart';
 export 'src/mvvm/provider.dart';
 export 'src/mvvm/controller.dart';
+export 'src/mvvm/observer.dart';
+export 'src/mvvm/composite_observer.dart';
