@@ -129,3 +129,59 @@ result.when(
   failure: (error, stackTrace) => print(error),
 );
 ```
+
+
+## Observer
+
+Plug-and-play lifecycle observer for logging, analytics, and error tracking.
+
+**Initialize once in `main()`:**
+
+```dart
+void main() {
+  Zren.initialize(
+    CompositeObserver([
+      const LoggingObserver(),
+      const CrashlyticsObserver(),
+    ]),
+  );
+  runApp(const MyApp());
+}
+```
+
+**Custom observer:**
+
+```dart
+class MyObserver extends ZrenObserver {
+  @override
+  void onCreate(ZrenController c) => print('Created: ${c.runtimeType}');
+
+  @override
+  void onChange(ZrenController c, ZrenChange change) =>
+      print('${c.runtimeType}: $change');
+
+  @override
+  void onEffect(ZrenController c, BaseEffect effect) =>
+      print('Effect: ${effect.runtimeType}');
+
+  @override
+  void onError(ZrenController c, Object error, StackTrace s) =>
+      FirebaseCrashlytics.instance.recordError(error, s);
+
+  @override
+  void onDispose(ZrenController c) => print('Disposed: ${c.runtimeType}');
+}
+```
+
+**Multiple controllers:**
+
+```dart
+ZrenMultiProvider(
+  controllers: [
+    () => AuthController(),
+    () => HomeController(),
+    () => WishlistController(),
+  ],
+  child: MyApp(),
+);
+```
