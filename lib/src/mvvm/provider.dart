@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:zren/mvvm.dart';
 
 class ZrenProvider<T> extends StatefulWidget {
   final T Function() create;
@@ -58,3 +59,28 @@ class _ZrenProviderState<T> extends State<ZrenProvider<T>> {
     _data = widget.create();
   }
 }
+
+class ZrenMultiProvider extends StatelessWidget {
+  final List<ZrenController<BaseState, BaseEffect> Function()> controllers;
+  final Widget child;
+
+  const ZrenMultiProvider({
+    super.key,
+    required this.controllers,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return controllers.reversed.fold<Widget>(
+      child,
+      (previous, create) {
+        return ZrenProvider(
+          create: create,
+          child: previous,
+        );
+      },
+    );
+  }
+}
+
